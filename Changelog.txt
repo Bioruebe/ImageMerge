@@ -1,0 +1,21 @@
+1.0.0 Beta 1
+  Added GUI resizing and maximizing
+  Added settings file
+  Added update check
+  Added about GUI
+  Added border to preview
+  Added 'Drop files here' label to preview if no images are loaded
+  Changed some GUI control positions
+  Removed redundant Redraw()s
+
+1.0.0 Alpha 2
+  Added button to delete selected layers
+  Added auto-incrementing to file name input field
+  Added saving after pressing enter in filename input field
+  Fixed flickering when loading multiple images
+  Fixed flickering when enabling layers
+  Fixed picture disappearing after minimize event
+  Fixed preview not preserving aspect ratio
+
+1.0.0 Alpha 1
+  Initial release
