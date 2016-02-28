@@ -58,13 +58,16 @@ $idButtonDelete = _SetResizing(GUICtrlCreateButton("Delete", 250, 418, 51, 25))
 $idButtonClear = _SetResizing(GUICtrlCreateButton("Clear", 312, 418, 59, 25))
 $idButtonSave = _SetResizing(GUICtrlCreateButton("Save", 440, 368, 99, 25))
 $idButtonSaveAs = _SetResizing(GUICtrlCreateButton("...", 512, 336, 27, 21))
-$idFileName = _SetResizing(GUICtrlCreateInput("", 394, 338, 145, 21))
+$idFileName = _SetResizing(GUICtrlCreateInput("", 360, 336, 145, 21))
 $idAbout = GUICtrlCreatePic("information-button.gif", 512, 416, 25, 25)
 $idSettings = GUICtrlCreatePic("gear-loading.gif", 472, 416, 25, 25)
+$idEnter = GUICtrlCreateDummy()
 
 ;~ GUISetBkColor(0xFFFFFF)
+Local $aAccelKeys[1][2] = [["{ENTER}", $idEnter]]
+GUISetAccelerators($aAccelKeys)
 GUISetOnEvent($GUI_EVENT_CLOSE, "_Exit")
-GUICtrlSetOnEvent($idFileName, "_OnSave")
+GUICtrlSetOnEvent($idEnter, "_OnEnter")
 GUICtrlSetOnEvent($idButtonSave, "_OnSave")
 GUICtrlSetOnEvent($idButtonSaveAs, "_OnSaveAs")
 GUICtrlSetOnEvent($idButtonClear, "_OnClear")
@@ -213,6 +216,11 @@ Func _OnSaveAs()
 	If @error Then Return
 	GUICtrlSetData($idFileName, StringTrimLeft($sFileName, StringInStr($sFileName, "\", 0, -1)))
 ;~ 	_SaveMerged($sFileName)
+EndFunc
+
+; Handle enter key
+Func _OnEnter()
+	If ControlGetFocus($hGUI) = "Edit1" Then _OnSave()
 EndFunc
 
 ; Handle 'Up' button click

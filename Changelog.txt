@@ -6,6 +6,7 @@
   Added border to preview
   Added 'Drop files here' label to preview if no images are loaded
   Changed some GUI control positions
+  Fixed OnSave() sometimes being triggered 2 times
   Removed redundant Redraw()s
 
 1.0.0 Alpha 2
