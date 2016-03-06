@@ -1,7 +1,7 @@
 # ImageMerge
 A simple tool to merge single layers to one image. Including preview window, layer reordering and visibility toggling functionality. Excluding any third-party dependencies.
 
-I created this tool because I needed to combine multiple layers to single images. As I needed to decide which layers to combine, I could not use any batch mode and starting up The GIMP every time took way to long. This is the result of a few days of trying to understand GDI+.
+I created this tool because I needed to combine multiple layers to single images. As I had to decide which layers to combine and often wanted to create multiple versions with different layers enabled, I could not use any batch mode and starting up The GIMP every time would have taken way to long. So I decided to write a simple tool for the task. This is the result of a few days of trying to understand GDI+.
 
 ## Usage
 ![Main GUI](https://raw.githubusercontent.com/Bioruebe/ImageMerge/master/documentation/01 MainGUI.png)
