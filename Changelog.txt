@@ -1,3 +1,9 @@
+1.0.0 Beta 2
+  Added delete hotkey
+  Added button to auto-increment file name manually
+  Fixed crash after clicking 'Clear'
+  Fixed auto-incrementing file names didn't work after a new image was loaded
+
 1.0.0 Beta 1
   Added GUI resizing and maximizing
   Added settings file

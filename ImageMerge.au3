@@ -57,14 +57,15 @@ $idButtonDown = _SetResizing(GUICtrlCreateButton("Down", 250, 370, 51, 25))
 $idButtonDelete = _SetResizing(GUICtrlCreateButton("Delete", 250, 418, 51, 25))
 $idButtonClear = _SetResizing(GUICtrlCreateButton("Clear", 312, 418, 59, 25))
 $idButtonSave = _SetResizing(GUICtrlCreateButton("Save", 440, 368, 99, 25))
-$idButtonSaveAs = _SetResizing(GUICtrlCreateButton("...", 512, 336, 27, 21))
-$idFileName = _SetResizing(GUICtrlCreateInput("", 360, 336, 145, 21))
+$idButtonSaveAs = _SetResizing(GUICtrlCreateButton("...", 488, 336, 27, 21))
+$idButtonPlus = _SetResizing(GUICtrlCreateButton("+", 518, 336, 21, 21))
+$idFileName = _SetResizing(GUICtrlCreateInput("", 336, 336, 145, 21))
 $idAbout = GUICtrlCreatePic("information-button.gif", 512, 416, 25, 25)
 $idSettings = GUICtrlCreatePic("gear-loading.gif", 472, 416, 25, 25)
 $idEnter = GUICtrlCreateDummy()
 
 ;~ GUISetBkColor(0xFFFFFF)
-Local $aAccelKeys[1][2] = [["{ENTER}", $idEnter]]
+Local $aAccelKeys[2][2] = [["{ENTER}", $idEnter], ["{DEL}", $idButtonDelete]]
 GUISetAccelerators($aAccelKeys)
 GUISetOnEvent($GUI_EVENT_CLOSE, "_Exit")
 GUICtrlSetOnEvent($idEnter, "_OnEnter")
@@ -74,6 +75,7 @@ GUICtrlSetOnEvent($idButtonClear, "_OnClear")
 GUICtrlSetOnEvent($idButtonUp, "_OnUp")
 GUICtrlSetOnEvent($idButtonDown, "_OnDown")
 GUICtrlSetOnEvent($idButtonDelete, "_OnDelete")
+GUICtrlSetOnEvent($idButtonPlus, "_OnPlus")
 GUICtrlSetOnEvent($idAbout, "_OnAbout")
 GUICtrlSetOnEvent($idSettings, "_OnSettings")
 GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
@@ -111,12 +113,16 @@ Func _LoadImage($sPath)
 	GUICtrlSetState($idDropLabel, $GUI_HIDE)
 	Local $hImage = _GDIPlus_ImageLoadFromFile($sPath)
 	If @error Then Return MsgBox(16, $sTitle, "Failed to open image " & $sPath & @CRLF & @CRLF & @extended)
+
 	Local $iSize = UBound($aImages)
 	ReDim $aImages[$iSize + 1][UBound($aImages, 2)]
 
 	; Parse filename
 	$iPos = StringInStr($sPath, "\", 0, -1)
 	$sFileName = $iPos < 1? $sPath: StringTrimLeft($sPath, $iPos)
+
+	; Set working directory so the file is saved to the last used folder
+	If $iPos > 0 Then FileChangeDir(StringLeft($sPath, $iPos))
 
 	$aImages[$iSize][0] = $hImage
 	$aImages[$iSize][1] = _GDIPlus_ImageGetWidth($hImage)
@@ -188,20 +194,7 @@ Func _SaveMerged($sPath)
 
 	_WinAPI_RedrawWindow($hGUI, "", "", BitOR($RDW_ERASE, $RDW_INVALIDATE, $RDW_UPDATENOW, $RDW_FRAME, $RDW_ALLCHILDREN))
 
-	; Iterate filename
-	$iSaveCount += 1
-	Local $sFileName = GUICtrlRead($idFileName)
-	$iPos = StringInStr($sFileName, ".", 0, -1) - 1
-	If $iPos < 2 Then Return
-	$iLength = StringLen($iSaveCount)
-	Cout(StringMid($sFileName, $iPos - $iLength + 1, $iLength) & "          " & $iSaveCount & "           " & StringLeft($sFileName, $iPos))
-	If $iSaveCount == 1 Then
-		$sFileName = StringLeft($sFileName, $iPos) & $iSaveCount + 1 & StringTrimLeft($sFileName, $iPos)
-	Else
-		If StringMid($sFileName, $iPos - $iLength + 1, $iLength) <> $iSaveCount Then Return
-		$sFileName = StringLeft($sFileName, $iPos - $iLength) & $iSaveCount + 1 & StringTrimLeft($sFileName, $iPos)
-	EndIf
-	GUICtrlSetData($idFileName, $sFileName)
+	_IncrementFileName()
 EndFunc
 
 
@@ -236,6 +229,11 @@ EndFunc
 ; Handle 'Delete' button click
 Func _OnDelete()
 	_DeleteItemsSelected($idLayers)
+EndFunc
+
+; Handle '+' button click
+Func _OnPlus()
+	_IncrementFileName(True)
 EndFunc
 
 ; Handle 'Clear' button click
@@ -315,6 +313,7 @@ Func _Redraw()
 	_WinAPI_RedrawWindow($hGUI, "", "", BitOR($RDW_ERASE, $RDW_INVALIDATE, $RDW_UPDATENOW, $RDW_FRAME, $RDW_ALLCHILDREN))
 	$iEnabledLayers = 0
 
+	If $iSize < 1 Then $iSize = 1
 	For $i = 0 To $iSize - 1
 		If _GUICtrlListView_GetItemChecked($idLayers, $i) Then _DrawToBuffer($i)
 	Next
@@ -338,6 +337,28 @@ Func _SetFileName()
 	$sBackgroundName = $sFileName
 	Local $iPos = StringInStr($sFileName, ".", 0, -1) - 1
 	If $iPos > 0 Then $sFileName = StringLeft($sFileName, $iPos) & "_merged" & StringTrimLeft($sFileName, $iPos)
+	GUICtrlSetData($idFileName, $sFileName)
+	$iSaveCount = 0
+EndFunc
+
+; Increment filename
+Func _IncrementFileName($bForce = False)
+	Local $sFileName = GUICtrlRead($idFileName)
+	$iPos = StringInStr($sFileName, ".", 0, -1) - 1
+	If $iPos < 2 Then Return
+	$iSaveCount += 1
+	$iLength = StringLen($iSaveCount)
+;~ 	Cout(StringMid($sFileName, $iPos - $iLength + 1, $iLength) & "          " & $iSaveCount & "           " & StringLeft($sFileName, $iPos))
+
+	If $iSaveCount == 1 Then
+		$iLength = 0
+	ElseIf StringMid($sFileName, $iPos - $iLength + 1, $iLength) <> $iSaveCount Then
+		If Not $bForce Then	Return
+		$iSaveCount = 1
+		$iLength = 0
+	EndIf
+
+	$sFileName = StringLeft($sFileName, $iPos - $iLength) & $iSaveCount + 1 & StringTrimLeft($sFileName, $iPos)
 	GUICtrlSetData($idFileName, $sFileName)
 EndFunc
 
@@ -465,8 +486,12 @@ EndFunc
 ; ===============================================================================================================================
 Func _DeleteItemsSelected($hWnd)
 	Local $iItemCount = _GUICtrlListView_GetItemCount($hWnd)
+	$iSelectedCount = _GUICtrlListView_GetSelectedCount($hWnd)
+
+	If $iSelectedCount < 1 Then Return True
+
 	; Delete all?
-	If _GUICtrlListView_GetSelectedCount($hWnd) = $iItemCount Then
+	If $iSelectedCount = $iItemCount Then
 		_OnClear()
 		Return _GUICtrlListView_DeleteAllItems($hWnd)
 	Else
